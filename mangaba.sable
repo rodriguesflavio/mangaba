@@ -1,0 +1,227 @@
+Package Mangaba; 
+     
+Helpers
+  
+  acento_letra = 'á' | 'â' | 'à' | 'ã' | 'é' | 'ê' | 'í' | 'ú' | 'ó' | 'ô' | 'õ';
+  letra = ['a' .. 'z'] | ['A' .. 'Z'] | acento_letra | '_';
+  digito = ['0' .. '9'];
+  digito_octal= ['0' .. '7'];
+  digito_hex = ['0' .. '9'] | ['A' .. 'F'] | ['a' .. 'f'];
+  dec_literal = digito+;
+  oct_literal = '0'(digito_octal)+;
+  hex_literal = '0'('x' | 'X')(digito_hex)+;
+  all = [0 .. 127];
+
+  //caracteres vazios
+  sp = ' ';
+  tab = 9;
+  cr = 13;
+  lf = 10;
+  nl = 10;
+  espaco = ' ';
+  eol = cr | lf | cr | lf;
+  
+  // comentarios
+  not_cr_lf = [all -[cr + lf]];
+  not_star = [all -'*'];
+  not_star_slash = [not_star -'/'];
+  blank = (' ' | tab | eol)+;
+  comentario_linha = '//' not_cr_lf* eol;
+  comentario_bloco = '/*' not_star* '*'+ (not_star_slash not_star* '*'+)* '/';
+
+
+Tokens
+ 
+  //operadores aritméticos
+  
+  adicao = '+';
+  subtracao = '-';
+  multiplicacao = '*';
+  divisao = '/';
+  
+  
+  //operadores relacionais
+  
+  menor = '<';
+  maior = '>';
+  menor_igual = '<=';
+  maior_igual = '>=';
+  igual = '=';
+  diferente = '!=';
+  atribuicao = ':=';
+  
+  //operadores lógicos
+  
+  nao = 'não';
+  e = 'e';
+  ou = 'ou';
+  
+  //separadores
+  
+  virgula = ',';
+  doispontos = ':';
+  pontoevirgula = ';';
+  ponto = '.';
+  tres_pontos = '...';
+  abreparenteses = '(';	
+  fechaparenteses = ')';
+  abrecolchetes = '[';
+  fechacolchetes = ']';
+  abrechaves = '{';
+  fechachaves = '}';
+  barra = '|';
+  
+  
+  // tipos
+  
+  inteiro = 'inteiro';
+  inteiro_literal = dec_literal | oct_literal | hex_literal;
+  caractere = 'caractere';
+  caractere_literal = letra;
+  real = 'real';
+  real_literal = ['0' .. '9']+ | digito ',' digito;
+  booleano = 'booleano';
+  bool_literal = 'verdadeiro' | 'falso';
+  
+  //espaços vazios
+  vazio = espaco | cr lf | cr | lf | tab | nl ;
+  
+  
+  // comandos  e condicionais
+  enquanto = 'enquanto';
+  para = 'para';
+  paracada = 'para cada'; 
+  se = 'se';
+  senao = 'senão';
+  
+
+  //program 
+  inicio = 'início';
+  fim = 'fim';
+  retorne = 'retorne';
+  vetor = 'vetor';
+    
+  identificador = letra (letra | digito)*;
+  numero = (digito(digito)*) ('.'(digito(digito)*));
+ 
+Ignored Tokens
+ vazio;
+
+Productions
+	
+	// block = dec_funcao;
+	dec_var = tipo lista_nomes pontoevirgula;
+	
+	lista_nomes = lista_nomes virgula identificador
+	  		|{id} identificador;
+			
+	dec_funcao = tipo_retorno identificador abreparenteses parametros fechaparenteses bloco;
+	
+	tipo_retorno = tipo;
+			 
+	parametros = {p_vazia}/* vazio */
+	  		| {params} parametros barra parametro
+	  		| {param} parametro;
+	  
+ 	parametro = {param}tipo identificador;
+	  
+	bloco = inicio lista_dec lista_comando fim;
+			
+	lista_dec = /* vazio */ 
+	  		|{lista} lista_dec1;	  		
+	  
+	lista_dec1 = {lista_dec} dec_var lista_dec1
+	   		|{dec} dec_var;
+			
+	lista_comando = /*vazio*/
+	  		|{lista} lista_comando1;
+	    
+	lista_comando1 =  {lista_com} comando lista_comando1
+	   			|{comando} comando;
+				
+	comando = comando_se
+		   |{com_se} comando_senao
+		   |{enquanto} comando_enquanto 
+		   |{para} comando_para
+		   |{para_cada} comando_para_cada
+		   | {atribuicao} atrib lista_ponto_virgula
+		   | {retorno} retorno
+		   | {ch} chamada lista_ponto_virgula; 		   
+		   
+	  comando_se = se abreparenteses expr fechaparenteses comando;
+	  comando_senao = comando_se senao comando;
+	  comando_enquanto = enquanto abreparenteses expr fechaparenteses comando;
+	  comando_para = para abreparenteses aux_para fechaparenteses comando;
+	  comando_para_cada = paracada abreparenteses aux_para_cada fechaparenteses comando;
+	  
+	  aux_para =  lista_atrib lista_ponto_virgula ;
+	  
+	  lista_ponto_virgula = {p1} expr pontoevirgula  
+				| {p2} pontoevirgula atrib;
+				
+	  aux_para_cada = tipo lista_id;
+	  
+	  lista_id = {i1} identificador
+			| {i2} doispontos identificador;
+	  
+	  atrib = var atribuicao expr
+			| {variavel_tipada} tipo atrib;
+			
+	  lista_atrib = lista_atrib virgula atrib 
+	  		|{atrib} atrib;
+	  
+	  retorno = retorne var pontoevirgula;
+		   
+	  var = identificador 
+			|{expr} var abrecolchetes expr fechacolchetes;  // posição de um array
+	  	  
+	  tipo_base = {int} inteiro | {caracter} caractere | {bool} booleano | {r} real;
+	 
+	  tipo_esp = inteiro_literal 
+			|{real} real_literal
+	 		|{caract} caractere_literal 
+	 		|{bool} bool_literal; 		
+	 	  	  
+	  tipo = tipo_base
+	  		|{vetor} vetor tipo_base ;
+			
+	  expr = tipo_esp 
+	 	  |{oprs} operadores
+		  |{cham} chamada;
+	  
+	  operadores = {fator} fator 
+		  |{op_adi} expr op_adi fator
+		  |{op_rel} expr op_rel fator
+		  |{op_bool} expr op_bool fator;
+	  
+	  op_rel = igual 
+		  | {menor_q} menor
+		  | {maior_q} maior
+		  | {maior_igual} maior_igual
+		  | {menor_igual} menor_igual;
+		
+	  op_adi = adicao 
+		  | {menos} subtracao;
+	
+	  op_mul = multiplicacao 
+		  | {divisao} divisao;
+	
+	  op_bool = e
+		  | {ou} ou
+		  | {nao} nao;
+	  
+	  fator =
+		  {termo} termo 
+		  |{op_mul} fator op_mul termo; 
+		//|{mod} fator mod termo; 
+	
+	 termo = {numero} numero
+	 	  |{var} var
+		  |{expr} abreparenteses expr fechaparenteses;	 
+	
+	 chamada = identificador abreparenteses lista_exp fechaparenteses pontoevirgula;
+	 
+	 lista_exp = /*lista_vazia*/ 
+	 		|{lista} lista_exp barra expr
+	 		|{exp} expr;
+	
