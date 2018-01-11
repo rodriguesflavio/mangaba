@@ -20,10 +20,7 @@ public class Main {
         try {
             String arquivo = "src/exp.calc";
 
-            Lexer lexer
-                    = new Lexer(
-                            new PushbackReader(
-                                    new FileReader(arquivo), 1024));
+            Lexer lexer = new Lexer(new PushbackReader(new FileReader(arquivo), 1024));
             Token token;
             while (!((token = lexer.next()) instanceof EOF)) {
                 strToken = token.toString();
